@@ -1,0 +1,191 @@
+/* ECE 391
+ * MP3 Bug Log
+ * Matthew Wei, Andrew Osepek, Luke Bolke, Kashyap Ramachandrula
+ *
+ * Bug Log Format
+ * - Checkpoint Number
+ *		- Functionality we had to write
+ *			- Bug Error
+ *				- Error in more detail
+ *				- What was the issue
+ *				- How we found the fix
+ *				- What we fixed
+ *
+ * Bug log does not include compile errors that were run into
+ *
+ */
+
+Checkpoint 1
+
+GDT
+	- Segmentation fault
+		- Everytime code was run there would be a seg fault
+		- Launch test was trying to do tests that couldn't be done
+		- Saw on Piazza the fix
+		- Commented out launch tests
+	- GDT wouldn't load
+		- System wouldn't boot at all
+		- Loading GDT was done incorrectly
+		- Saw in Intel manual the ISA for loading GDT
+		- Changed command to lgdt
+IDT
+	- IDT not enabled
+		- IDT didn't turn on properly when tested
+		- IDT was loaded in the wrong spot and incorrectly
+		- Asked help from TA
+		- Changed from boot.S to kernel.c for initialization
+	- Issues with raising exceptions
+		- Exception was raised everytime kernel booted up
+		- Present value in IDT was not being set properly
+		- Went through code and thought about it
+		- Change from 0 to 1
+PIC
+	- Devices weren't being initialized
+		- None of the devices were being read properly to the IRQs
+		- Offset for slave was off
+		- Looked through code and reasoned (30 minutes)
+		- Changed 7 to 8
+	- EOI was incorrect
+		- Keyboard wasn't ending interrupt and only printed one character
+		- Wrong port was being used for signaling
+		- GDB stepped through it and found error
+		- Changed from command port to data port
+Keyboard
+	- Key not showing up
+		- Everytime kernel compliled and key was pressed, nothing was shown
+		- Enabling was not being done properly
+		- Went through code and found problem (7 hours)
+		- Changed PIC enable and disable code
+	- Only one key showed up
+		- When we type, only one key shows up
+		- Issue with the assembly linkage
+		- TA helped through it and fixed all the header file issues
+		- Changing what is included and what isn't
+	- One key still showed up
+		- Only one key showed up
+		- EOI function in PIC was incorrect (wrong port)
+		- GDB stepper
+		- Changed 3 variables in functino to command port
+RTC
+	- RTC wasn't properly doing its test case
+		- PIC was initalized wrong for RTC, fixing its IRQ enables changd it
+		- Mentioned later as well
+Paging
+	- Boot loop
+		- Kernel doesn't boot up all the way
+		- Still debugging
+
+Checkpoint 2
+RTC
+	- Issue with the PIC (this was a checkpoint 1 error)
+	- No other errors with RTC
+
+Terminal Driver
+	- Shift Glitch
+		- When we would press one shift, then the next, then release both shifts, the letters would stay as if shift was still pressed
+		- We were checking the conditions at incorrect positions
+		- We had to check for two scancodes regarding shifts at a time instead of 1 and use only 1 shift flag
+		
+	- Terminal was printing out incorrect characters
+		- Was using the scan code instead of the ASCII characters so characters varied heavily
+
+	- Synchronization with terminal write
+		- We didn't include cli() and sti() with the terminal write function
+		- This caused skewed outputs from our test cases
+		- After adding in synchronization, everything with write looked good
+		
+	- Buffer wasn't printing out all characters correctly
+		- Buffer only takes in 128 and there are only 80 spots for one line
+		- This means the characters after 80 were being put in the earlier spots, giving weird outputs
+		- Had to change so it printed new line and didn't overwrite
+
+File System
+	- Incorrect usage of inode
+		- We thought that inode being passed in to read_data was a pointer
+		- This resulted in weird characters being printed to the screen
+		- We had to treat inode as an index between 0 and 64 instead of a pointer
+	
+	- Incorrect usage of string copy
+		- Originally, we didn't know that you have to specify the amount of bytes to copy over
+		- So we used strcpy provided through lib.c
+		- Since we had to specify the amount of bytes to copy over in read_dentry_by_name, we changed strcpy to strncpy
+
+	- Reading multiple files at once in directory_read
+		- We were using a for loop to iterate through multiple files at once in directory read
+		- Discussion slides stated that we should only read one file at a time
+		- We got rid of the for loop
+		- Updated test case so the test case had the for loop instead of directory_read
+
+Checkpoint 3
+
+System Execute
+	- Incorrect parsing of command argument
+		- When reading the first string into the executive name buffer, we failed to account for space in 
+	  	  our buffer for the Null terminated character. 
+		- Consequently, we increased the size of our buffer by 1 to account for Null terminating character.
+
+	- Incorrectly reading the program eip from the executable file
+		- Failed to account that values in memory are stored in little endian order
+		- Consequnetly, we read the program eip in the reverse order, we changed this by reversing the order we
+	  	  read the program eip from memory. 
+System Read
+	- Misunderstanding of argument "fd" in directory_read, directory_read failed to work
+		- Had to restructure the entire function
+		- Accounted for the existence of file descriptor array when reading files from directory
+		- Fixed return value to 0 if all files were read in the directory 
+	
+	- 391OS> prompt printed twice back to back, and when running hello, program reads an empty buffer as the user input
+		- While loop in terminal_read is broken when enter is pressed and when it is released, so keyboard buffer was correct when enter is pressed, but it is then cleared and read again when enter is released, causing an empty buffer
+		- Fixed by changing the if statement in our keyboard handler to only clear the reading flag if enter is pressed, and not when it is released
+
+System Halt
+	- Incorrectly read the ebp, esp, and status values from the stack in Halt
+		- Failed to account that arguments are passed right to left onto the stack. We
+	  	were reading the arguments on the stack in the opposite order (as if they were pushed left to right).
+		- Updated assembly code, so arguments were read correctly 
+
+System Close
+	- syserr works for all tests individually except for 5, which prints nothing, and when ran together with 0, only the first four print PASS
+		- We were closing stdin and stdout in our sys_close function, so in our sys_write the if statement checking if stdout was closed would be true, causing the function to return -1 and not print
+		- Fixed by only closing files with an fd greater than or equal to 2
+		
+Checkpoint 4
+
+Vidmap 
+	- Inorrect bit shifting when setting up video mem paging 
+		- When assigning the base address for the newly created page, we forgot to shift the physical address of the page to the right by 12 bits.
+		  Consequently, the address of the new page was at an index outside of [0-1023].
+		- We fixed it by shifting the physical address of video memory, 0xB8000, by 12. 
+GetArgs
+	- File not foud when more than one space existed between command and its argument. 
+		- Assumed the user would only enter one space between command and its argument
+		- Had to add a while loop between parsing command and argument that would terminate when a non-space character was reached. 
+
+Cat Executable
+	- Text file was not printed to the screen 
+		- Terminal Write had an if statement that prevented buffers greater than 128 from being printed to the terminal
+		- Removed the if statement to allow txt files like frame0.txt and frame1.txt to be printed
+		
+Checkpoint 5
+
+Terminals
+	- Terminals not switching
+		- Terminals didn't switch when pressing alt+f#
+		- If statement checking for keypressed had incorrect operation
+		- Looked through the code and changed it
+		- Changed the if statement from == to !=
+	- Position of terminal didn't remain constant
+		- Letters typed didn't stay in the same position when switching
+		- Didn't save the previous position and information of the terminal
+		- Forgot to implement it into the code
+		- Added a struct to keep track of all the terminals information
+	- Page Faulting sometimes when switching terminals
+		- In an unrecognized pattern, the terminals page-fault sometimes when switching
+		- Didn't end up finding the specific error
+		- Asked TA and other people and all said it was an issue with ESP/EBP in assembly
+		- Didn't end up finding a fix (error not found)
+	- Processes stay across terminals
+		- Figured it was an issue with not implementing scheduling
+
+Scheduling
+	- Did not end up implementing

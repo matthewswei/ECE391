@@ -1,0 +1,126 @@
+draw_vert_line
+- vertical line was drawing incorrectly
+  - moving screen to right
+  - show_y and x where in incorrect positions (took 3 minutes to find)
+  - fix was just chaning them to the correct positions and values
+- Scrolling to right caused screen to go black or didn't update to new image section (looped around)
+  - moving screen to right caused it to bug out
+  - for loop issue (took 20 minutes to find, had to figure out how the drawing worked)
+  - fix was to change the for loop (5 minutes)
+
+status_bar
+- Too big
+  - Status bar was too big on screen compared to demo
+  - Didn't account for total size (took 2 minutes to find, piazza)
+  - Change variable to new one
+- Screen color wrong
+  - Status bar showed the top part of buffer
+  - Had to add offset (took 10 minutes to find)
+  - Change some values to account for offset
+
+text-to-gen
+- Printing incorrectly
+  - Tested on online compiler and printed out values
+  - Bit shift wrote incorrectly, had to change it (other small minor bugs were found when changing the code) (30 minutes)
+  - Changed the bit-shift operation
+- Needed to incorporate other messages
+  - After adding in adventure.c, realized other messages had to be printed
+  - Not only room name had to be on status bar(5 minutes)
+  - Copy, pasted, and altered existing code to fix (5 minutes)
+- const, char, and int issues
+  - Errors and warnings kept popping up when compiling
+  - Thought about variables and what could change them (5 minutes)
+  - Changed variables to they would work
+- Printing incorrectly
+  - Noticed that synchronization worked and the text changed, but it was being printed incorrectly
+  - Index in text_gen function was incorrect and had to change it (10 minutes)
+  - Had to find a new index forumla (3 hours)
+- Dash at end of bar was not correct
+  - Dash was not at the bottom and instead at the top
+  - Offset was incorrect for the function (2 minutes)
+  - Changed offset so it was correct
+
+Connecting it together
+- Generation incorrect
+  - Nothing appeared on the status bar
+  - Put it in wrong location (5 minutes)
+  - Changed it to new location
+- Still not showing up
+  - Nothing appeard on the status bar
+  - Buffer variable was not correctly declared for outside use (3 minutes)
+  - Changed to work (led to const, char, and int issues in above function)
+- Used & for address values in input for the function, had to change
+- Typed and status messages weren't showing up when needed
+  - Messages showing up in status bar were not correct as they should have been
+  - Need a lock to synchronize the status bar changes (5 minutes)
+  - Added a lock for code to enter critical section (simple)
+
+Octree
+-Floating point error
+  - Using gdb, got floating point error
+  - Wrong type of variable
+  - Changed variable to correct one
+- Compare function written incorrect (1 hour)
+  - Using gdb and printing, sorted array was not correct
+  - Swapped the variables when comparing
+  - Simple change
+- Indexing was incorrect (1.5 hours)
+  - Using gdb found out indexes were incorrect and had to fix it
+  - Added an index in struct to keep track of origianl value
+  - Simple change
+- Offset was incorrect (3 hours)
+  - Logic in final output to VGA was incorrect
+  - Changed i to j
+  - Simple change
+- Miscallaneous bugs and errors (1 hour total)
+  - Most of the time the screen was a mix of colors so it was painful to debug
+
+Tux Controller
+- Buttons incorrect (Took 5 hours to debug with next bug)
+  - Left and down were switched
+  - Swap the bits
+  - Simple change
+- Buttons not reading (Took 5 hours to debug)
+  - None of the buttons were registering
+  - Wrong logic and inputs
+  - Updated logic and inputs
+- LEDs not showing correctly (Took 4 hours to debug)
+  - LEDs showed nothing, didn't update, showed P5, decimal wasn't showing, or minutes were incorrect
+  - Logic and implementation of ioctl was incorrect
+  - Updated logic
+- Miscallaneous bugs and errors (1 hour total)
+  - Hard to debug because couldn't follow the functions properly, had to use online gdb to test
+
+Input.c
+- Buttons not displaying on screen
+  - Nothing was being printed from buttons
+  - Wrong bit masks were being used (4 hours)
+  - Changed to correct bit masks
+- Time was showing incorrectly
+  - Timer was not correct
+  - Wrong logic for time (1 hour)
+  - Updated logic
+- Miscallaneous bugs and errors (1 hour total)
+  - Confusing to figure out how it worked
+
+Synchronization
+- Compilation bugs (2 hours)
+  - Random compilation errors took a long time
+  - During this process, updated a lot of potential bugs
+  - Syntax changes
+- Stops after one input from TUX (10 minutes)
+  - After pressing one button, the game would freeze
+  - Put reset button in wrong place
+  - Changed one line
+- Continuously keeps scrolling (10 minutes)
+  - The game kept scrolling in all directions in the plane
+  - Didn't correctly setup keyboard and tux locks
+  - Followed powerpoint
+- Background image didn't update (2 hour)
+  - After changing room, the background didn't change with it
+  - Needed to change enter_room to global variable
+  - Simple change, moved enter_room
+- Quits after a while (30 minutes)
+  - Game would quit after pressing keys
+  - Extra code dealing with ending the game
+  - Removed the extra code
